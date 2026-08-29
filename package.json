@@ -1,0 +1,19 @@
+{
+  "name": "graphql",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.10.0",
+    "bcrypt": "^6.0.0",
+    "graphql": "^17.0.2",
+    "graphql-yoga": "^5.22.0",
+    "jsonwebtoken": "^9.0.3"
+  }
+}
