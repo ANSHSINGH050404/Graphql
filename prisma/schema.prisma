@@ -1,0 +1,130 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+
+enum Role {
+  REPORTER
+  AGENT
+}
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_ON_CUSTOMER
+  RESOLVED
+  CLOSED
+}
+enum Priority {
+  URGENT
+  HIGH
+  MEDIUM
+  LOW
+}
+enum SlaState {
+  ON_TRACK
+  AT_RISK
+  BREACHED
+}
+enum EventType {
+  CREATED
+  STATUS_CHANGED
+  ASSIGNED
+  FIRST_RESPONSE
+  COMMENT
+  RESOLVED
+  REOPENED
+  CLOSED
+}
+
+model User {
+  id String @id @default(cuid())
+  email String @unique
+  name String
+  passwordHash String
+  role Role
+  createdAt DateTime @default(now())
+  reportedTickets Ticket[] @relation("Reporter")
+  assignedTickets Ticket[] @relation("Assignee")
+  events TicketEvent[]
+  comments Comment[] @relation("CommentAuthor")
+}
+model Ticket {
+  id String @id @default(cuid())
+  title String
+  description String
+  priority Priority @default(MEDIUM)
+  status TicketStatus @default(OPEN)
+  reporterId String
+  assigneeId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  firstResponseAt DateTime?
+  resolvedAt DateTime?
+  pausedAt DateTime?
+  responseDeadline DateTime
+  resolutionDeadline DateTime
+  reporter User @relation("Reporter", fields: [reporterId], references: [id])
+  assignee User? @relation("Assignee", fields: [assigneeId], references: [id])
+  events TicketEvent[]
+  comments Comment[]
+  resolutionAttempts ResolutionAttempt[]
+  @@index([createdAt, id])
+  @@index([status])
+  @@index([priority])
+  @@index([assigneeId])
+}
+model TicketEvent {
+  id String @id @default(cuid())
+  ticketId String
+  actorId String
+  type EventType
+  fromStatus TicketStatus?
+  toStatus TicketStatus?
+  fromAssigneeId String?
+  toAssigneeId String?
+  body String?
+  createdAt DateTime @default(now())
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actor User @relation(fields: [actorId], references: [id])
+  @@index([ticketId, createdAt])
+}
+model Comment {
+  id String @id @default(cuid())
+  ticketId String
+  authorId String
+  content String
+  createdAt DateTime @default(now())
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author User @relation("CommentAuthor", fields: [authorId], references: [id])
+  @@index([ticketId, createdAt])
+}
+model ResolutionAttempt {
+  id String @id @default(cuid())
+  ticketId String
+  startedAt DateTime @default(now())
+  resolvedAt DateTime?
+  dueAt DateTime
+  state SlaState @default(ON_TRACK)
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  @@index([ticketId, startedAt])
+}
+model Holiday {
+  id String @id @default(cuid())
+  date DateTime @db.Date
+  name String
+  @@unique([date])
+}
+
+
+
