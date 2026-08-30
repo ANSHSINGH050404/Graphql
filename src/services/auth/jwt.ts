@@ -11,6 +11,8 @@ if (!jwtSecret) {
   throw new Error("JWT_SECRET is not configured");
 }
 
+type Role = "REPORTER" | "AGENT";
+
 export interface AuthUser {
   id: string;
   email: string;
@@ -26,7 +28,7 @@ export function createToken(user: AuthUser): string {
       name: user.name,
       role: user.role,
     },
-    jwtSecret,
+    jwtSecret as string,
     {
       expiresIn: JWT_EXPIRES_IN,
     },
@@ -43,7 +45,12 @@ export function authenticate(header: string): AuthUser {
   }
 
   try {
-    const payload = jwt.verify(token, jwtSecret);
+    const payload = jwt.verify(token, jwtSecret as string) as jwt.JwtPayload & {
+      sub?: unknown;
+      email?: unknown;
+      name?: unknown;
+      role?: unknown;
+    };
 
     if (typeof payload !== "object" || payload === null) {
       throw new Error("UNAUTHORIZED");
