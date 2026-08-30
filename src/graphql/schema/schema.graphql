@@ -33,3 +33,152 @@ type Mutation {
     password: String!
   ): AuthPayload!
 }
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_ON_CUSTOMER
+  RESOLVED
+  CLOSED
+}
+
+enum Priority {
+  URGENT
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum SlaState {
+  ON_TRACK
+  AT_RISK
+  BREACHED
+}
+
+enum EventType {
+  CREATED
+  STATUS_CHANGED
+  ASSIGNED
+  FIRST_RESPONSE
+  COMMENT
+  RESOLVED
+  REOPENED
+  CLOSED
+}
+
+type Comment {
+  id: ID!
+  content: String!
+  createdAt: String!
+  author: User!
+}
+
+type TicketEvent {
+  id: ID!
+  type: EventType!
+  fromStatus: TicketStatus
+  toStatus: TicketStatus
+  fromAssigneeId: ID
+  toAssigneeId: ID
+  body: String
+  createdAt: String!
+  actor: User!
+}
+
+type ResolutionAttempt {
+  id: ID!
+  startedAt: String!
+  resolvedAt: String
+  dueAt: String!
+  state: SlaState!
+}
+
+type Ticket {
+  id: ID!
+  title: String!
+  description: String!
+  priority: Priority!
+  status: TicketStatus!
+
+  reporter: User!
+  assignee: User
+
+  createdAt: String!
+  updatedAt: String!
+
+  firstResponseAt: String
+  resolvedAt: String
+  pausedAt: String
+
+  responseDeadline: String!
+  resolutionDeadline: String!
+
+  comments: [Comment!]!
+  events: [TicketEvent!]!
+  resolutionAttempts: [ResolutionAttempt!]!
+}
+
+input CreateTicketInput {
+  title: String!
+  description: String!
+  priority: Priority
+}
+
+input UpdateTicketInput {
+  title: String
+  description: String
+  priority: Priority
+  status: TicketStatus
+  assigneeId: ID
+}
+
+input AddCommentInput {
+  ticketId: ID!
+  content: String!
+}
+
+type Query {
+  me: User
+  users: [User!]!
+
+  ticket(id: ID!): Ticket
+  tickets(
+    status: TicketStatus
+    priority: Priority
+    assigneeId: ID
+  ): [Ticket!]!
+}
+
+type Query {
+  me: User
+  users: [User!]!
+
+  ticket(id: ID!): Ticket
+  tickets(
+    status: TicketStatus
+    priority: Priority
+    assigneeId: ID
+  ): [Ticket!]!
+}
+
+type Mutation {
+  register(
+    name: String!
+    email: String!
+    password: String!
+  ): AuthPayload!
+
+  login(
+    email: String!
+    password: String!
+  ): AuthPayload!
+
+  createTicket(input: CreateTicketInput!): Ticket!
+
+  updateTicket(
+    id: ID!
+    input: UpdateTicketInput!
+  ): Ticket!
+
+  addComment(input: AddCommentInput!): Comment!
+}
